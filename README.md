@@ -73,14 +73,14 @@ StudioSpec Pro offre una **doppia modalità di utilizzo**:
 
 ---
 
-## 📦 Download Eseguibili Standalone (v1.0.0)
+## 📦 Applicazioni Desktop Standalone (Finestra Nativa Senza Browser)
 
-Non è richiesta alcuna installazione di Python per utilizzare gli eseguibili standalone:
+StudioSpec Pro funziona ora come **vera applicazione desktop standalone** con finestra nativa (Cocoa/WebKit su macOS e Win32/WebView2 su Windows), **senza aprire alcun browser o scheda web**:
 
-| Piattaforma | File Eseguibile / Pacchetto | Note di Installazione |
-|---|---|---|
-| **macOS** | [**`StudioSpecPro-macOS.dmg`**](https://github.com/muccio/StudioSpec-Pro/releases/download/v1.0.0/StudioSpecPro-macOS.dmg) (o [`.app.zip`](https://github.com/muccio/StudioSpec-Pro/releases/download/v1.0.0/StudioSpecPro-macOS.app.zip)) | Apri il `.dmg` e trascina **StudioSpec Pro.app** in *Applicazioni*. |
-| **Windows** | [**`StudioSpecPro.exe`**](https://github.com/muccio/StudioSpec-Pro/releases/download/v1.0.0/StudioSpecPro.exe) (o [`Standalone.zip`](https://github.com/muccio/StudioSpec-Pro/releases/download/v1.0.0/StudioSpecPro-Windows-x64-Standalone.zip)) | Eseguibile nativo x86-64 a 64-bit pronto con doppio clic. |
+| Piattaforma | File Eseguibile / Pacchetto | Tipo Finestra Nativa | Link Diretto al Download |
+|---|---|---|---|
+| **macOS** | [**`StudioSpecPro-macOS.dmg`**](https://github.com/muccio/StudioSpec-Pro/releases/download/v1.0.0/StudioSpecPro-macOS.dmg) (o [`.app.zip`](https://github.com/muccio/StudioSpec-Pro/releases/download/v1.0.0/StudioSpecPro-macOS.app.zip)) | Finestra nativa macOS Cocoa (Dark Titlebar) | [**Download DMG**](https://github.com/muccio/StudioSpec-Pro/releases/download/v1.0.0/StudioSpecPro-macOS.dmg) |
+| **Windows** | [**`StudioSpecPro.exe`**](https://github.com/muccio/StudioSpec-Pro/releases/download/v1.0.0/StudioSpecPro.exe) (o [`Standalone.zip`](https://github.com/muccio/StudioSpec-Pro/releases/download/v1.0.0/StudioSpecPro-Windows-x64-Standalone.zip)) | Finestra nativa Windows Win32 (WebView2) | [**Download EXE**](https://github.com/muccio/StudioSpec-Pro/releases/download/v1.0.0/StudioSpecPro.exe) |
 
 ---
 
