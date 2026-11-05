@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudioSpec Pro - Audio Workstation Inspector & Kontakt DFD Benchmark</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- TOP NAVIGATION -->
+    <header class="studio-header">
+      <div class="header-brand">
+        <div class="logo-icon">🎛️</div>
+        <div>
+          <h1>StudioSpec <span class="accent-text">PRO</span></h1>
+          <p class="subtitle">Audio Workstation Inspector & DAW Hardware Benchmarking</p>
+        </div>
+      </div>
+      <div class="header-meta">
+        <div class="meta-pill" id="hostPill">
+          <span class="dot online"></span>
+          <span id="hostname">Caricamento...</span>
+        </div>
+        <div class="meta-pill" id="osPill">Piattaforma: <strong id="platformText">-</strong></div>
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="refreshDiagnostics()">🔄 Aggiorna</button>
+          <div class="dropdown">
+            <button class="btn btn-primary">📥 Esporta Report ▾</button>
+            <div class="dropdown-content">
+              <a href="/export/markdown" download>Esporta Markdown (.md)</a>
+              <a href="/export/json" download>Esporta JSON (.json)</a>
+              <a href="javascript:window.print()">Stampa / PDF</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN DASHBOARD GRID -->
+    <main class="dashboard-main">
+      <!-- HERO SCORE SECTION -->
+      <section class="card score-hero-card">
+        <div class="score-display">
+          <div class="gauge-wrapper">
+            <svg class="score-gauge" viewBox="0 0 160 160">
+              <circle class="gauge-bg" cx="80" cy="80" r="70"></circle>
+              <circle class="gauge-fill" id="scoreCircle" cx="80" cy="80" r="70"></circle>
+            </svg>
+            <div class="gauge-center">
+              <span class="score-number" id="totalScoreNum">--</span>
+              <span class="score-denom">/100</span>
+            </div>
+          </div>
+          <div class="score-details">
+            <div class="tier-badge-container">
+              <span class="badge-tier" id="tierBadge">VALUTAZIONE IN CORSO</span>
+            </div>
+            <h2 class="tier-title" id="tierTitle">Analisi Workstation...</h2>
+            <p class="tier-desc" id="tierDesc">Caricamento delle metriche hardware e dei driver CoreAudio / ASIO...</p>
+          </div>
+        </div>
+
+        <div class="score-breakdown-grid">
+          <div class="breakdown-card">
+            <div class="bd-header">
+              <span>🎛️ Audio I/O & Driver</span>
+              <strong id="audioIoScore">-- / 30</strong>
+            </div>
+            <div class="progress-bar"><div class="fill" id="fillAudio" style="width: 0%"></div></div>
+            <small>Interfacce, clock e latenza hardware</small>
+          </div>
+          <div class="breakdown-card">
+            <div class="bd-header">
+              <span>⚡ CPU & Elaborazione DSP</span>
+              <strong id="cpuDspScore">-- / 30</strong>
+            </div>
+            <div class="progress-bar"><div class="fill" id="fillCpu" style="width: 0%"></div></div>
+            <small>P-Cores, IPC single-core e SIMD</small>
+          </div>
+          <div class="breakdown-card">
+            <div class="bd-header">
+              <span>🧠 RAM & Sample Bandwidth</span>
+              <strong id="ramSampleScore">-- / 25</strong>
+            </div>
+            <div class="progress-bar"><div class="fill" id="fillRam" style="width: 0%"></div></div>
+            <small>Capacità template e zero swap</small>
+          </div>
+          <div class="breakdown-card">
+            <div class="bd-header">
+              <span>💾 Storage & DFD Throughput</span>
+              <strong id="storageDfdScore">-- / 15</strong>
+            </div>
+            <div class="progress-bar"><div class="fill" id="fillStorage" style="width: 0%"></div></div>
+            <small>Velocità SSD e spazio progetti</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- DISK BENCHMARK & KONTAKT DFD CALCULATOR -->
+      <section class="card benchmark-card">
+        <div class="card-header">
+          <div>
+            <h3>💾 Benchmark Disco & Capacità Streaming Campionatori (Kontakt DFD)</h3>
+            <p class="section-sub">Misura la velocità reale del disco e stima il numero massimo di patch Native Instruments Kontakt / VSL in contemporanea senza click o lag.</p>
+          </div>
+          <div class="bench-controls">
+            <select id="driveSelect" class="form-select">
+              <option value="/">Caricamento dischi...</option>
+            </select>
+            <button class="btn btn-accent" id="btnRunBench" onclick="triggerDiskBenchmark()">🚀 Avvia Benchmark</button>
+          </div>
+        </div>
+
+        <!-- BENCHMARK RESULTS -->
+        <div id="benchLoading" class="bench-loading" style="display: none;">
+          <div class="spinner"></div>
+          <p>Esecuzione test I/O sequenziale e blocchi 64KB DFD in corso sul disco selezionato...</p>
+        </div>
+
+        <div id="benchResults" class="bench-results-grid">
+          <!-- KPI Speeds -->
+          <div class="kpi-card">
+            <span class="kpi-label">Lettura Random 64KB (DFD)</span>
+            <div class="kpi-value text-accent" id="benchRndRead">-- MB/s</div>
+            <span class="kpi-sub" id="benchIops">-- IOPS</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Lettura Sequenziale</span>
+            <div class="kpi-value" id="benchSeqRead">-- MB/s</div>
+            <span class="kpi-sub">Caricamento progetti raw</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Scrittura Sequenziale</span>
+            <div class="kpi-value" id="benchSeqWrite">-- MB/s</div>
+            <span class="kpi-sub">Registrazione multi-canale</span>
+          </div>
+
+          <!-- Highlight: Kontakt Capacity -->
+          <div class="kontakt-hero-box">
+            <div class="kontakt-badge">NATIVE INSTRUMENTS KONTAKT DFD ENGINE</div>
+            <div class="kontakt-grid">
+              <div class="k-stat">
+                <span class="k-stat-num text-success" id="kontaktHeavy">--</span>
+                <span class="k-stat-label">Patch Orchestrali Pesanti Simultanee</span>
+                <small>Spitfire, Berlin Strings, Cinematic Studio (multi-microfono ~40 voci/patch)</small>
+              </div>
+              <div class="k-stat">
+                <span class="k-stat-num text-cyan" id="kontaktStandard">--</span>
+                <span class="k-stat-label">Patch Standard / Pianoforti Simultanei</span>
+                <small>Piani a coda, Kit di batteria, Chitarre, Synth pads (~15 voci/patch)</small>
+              </div>
+              <div class="k-stat">
+                <span class="k-stat-num" id="kontaktVoices">--</span>
+                <span class="k-stat-label">Voci Audio 48kHz / 24-bit dal Disco</span>
+                <small>Throughput DFD sicuro con 30% di margine dinamico</small>
+              </div>
+            </div>
+            <div class="kontakt-footer">
+              <div><strong>Rischio Click & Lag:</strong> <span id="clickRiskBadge" class="tag-status">--</span></div>
+              <div><strong>Buffer DFD Consigliato:</strong> <span id="kontaktBufferVal" class="tag-accent">--</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- AUDIO DEVICES TABLE -->
+      <section class="card table-card">
+        <div class="card-header">
+          <div>
+            <h3>🎛️ Dispositivi di Ingresso & Uscita Audio (<span id="devCount">0</span> Rilevati)</h3>
+            <p class="section-sub">Dettaglio completo di periferiche, nomi driver, frequenze di campionamento e latenza hardware.</p>
+          </div>
+          <div class="table-tools">
+            <input type="text" id="devSearch" placeholder="🔍 Cerca dispositivo o driver..." class="form-input" onkeyup="filterDeviceTable()">
+            <div class="filter-tabs">
+              <button class="tab-btn active" onclick="setDevFilter('all')">Tutti</button>
+              <button class="tab-btn" onclick="setDevFilter('input')">Ingressi</button>
+              <button class="tab-btn" onclick="setDevFilter('output')">Uscite</button>
+              <button class="tab-btn" onclick="setDevFilter('duplex')">Duplex I/O</button>
+              <button class="tab-btn" onclick="setDevFilter('pro')">Studio Pro</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="studio-table" id="devicesTable">
+            <thead>
+              <tr>
+                <th>Dispositivo</th>
+                <th>Produttore</th>
+                <th>Driver Periferica</th>
+                <th>Tipo / Bus</th>
+                <th>Canali</th>
+                <th>Sample Rate</th>
+                <th>Latenza RTL</th>
+                <th>Grado Studio</th>
+              </tr>
+            </thead>
+            <tbody id="devicesTableBody">
+              <tr><td colspan="8" class="text-center">Scansione CoreAudio / ASIO in corso...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- WORKSTATION HARDWARE SPECS -->
+      <section class="card hardware-card">
+        <div class="card-header">
+          <div>
+            <h3>💻 Specifiche Hardware della Workstation</h3>
+            <p class="section-sub">Architettura CPU, memoria RAM, storage e sottosistema audio del sistema operativo.</p>
+          </div>
+        </div>
+        <div class="hw-grid">
+          <div class="hw-item">
+            <span class="hw-icon">⚡</span>
+            <div>
+              <span class="hw-label">Processore (CPU)</span>
+              <strong class="hw-val" id="cpuModel">--</strong>
+              <small class="hw-sub" id="cpuTopology">--</small>
+            </div>
+          </div>
+          <div class="hw-item">
+            <span class="hw-icon">📐</span>
+            <div>
+              <span class="hw-label">Istruzioni Vettoriali / SIMD</span>
+              <strong class="hw-val" id="cpuSimd">--</strong>
+              <small class="hw-sub">Accelerazione convoluzioni & DSP</small>
+            </div>
+          </div>
+          <div class="hw-item">
+            <span class="hw-icon">🧠</span>
+            <div>
+              <span class="hw-label">Memoria RAM</span>
+              <strong class="hw-val" id="ramTotal">--</strong>
+              <small class="hw-sub" id="ramSwap">Swap: --</small>
+            </div>
+          </div>
+          <div class="hw-item">
+            <span class="hw-icon">💿</span>
+            <div>
+              <span class="hw-label">Disco di Sistema</span>
+              <strong class="hw-val" id="storageName">--</strong>
+              <small class="hw-sub" id="storageSpace">Spazio libero: --</small>
+            </div>
+          </div>
+          <div class="hw-item">
+            <span class="hw-icon">⚙️</span>
+            <div>
+              <span class="hw-label">Sottosistema Audio OS</span>
+              <strong class="hw-val" id="audioSubsystem">--</strong>
+              <small class="hw-sub" id="audioDaemon">Daemon: --</small>
+            </div>
+          </div>
+          <div class="hw-item">
+            <span class="hw-icon">🔌</span>
+            <div>
+              <span class="hw-label">Formati Plugin Supportati</span>
+              <strong class="hw-val" id="pluginFormats">--</strong>
+              <small class="hw-sub">Architettura standard</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- INTERACTIVE LATENCY & BUFFER CALCULATOR -->
+      <section class="card latency-card">
+        <div class="card-header">
+          <div>
+            <h3>⏱️ Calcolatore Interattivo Latenza & Buffer DAW</h3>
+            <p class="section-sub">Verifica i millisecondi di ritardo in ingresso/uscita (RTL) alle diverse combinazioni di sample rate e buffer.</p>
+          </div>
+        </div>
+        <div class="calc-grid">
+          <div class="calc-controls">
+            <div class="control-group">
+              <label>Frequenza di Campionamento (Sample Rate):</label>
+              <div class="radio-chips">
+                <button class="chip" onclick="setCalcSampleRate(44100)">44.1 kHz</button>
+                <button class="chip active" onclick="setCalcSampleRate(48000)">48.0 kHz</button>
+                <button class="chip" onclick="setCalcSampleRate(88200)">88.2 kHz</button>
+                <button class="chip" onclick="setCalcSampleRate(96000)">96.0 kHz</button>
+                <button class="chip" onclick="setCalcSampleRate(192000)">192.0 kHz</button>
+              </div>
+            </div>
+            <div class="control-group">
+              <label>Dimensione Buffer DAW (Campioni):</label>
+              <div class="radio-chips">
+                <button class="chip" onclick="setCalcBuffer(32)">32 smp</button>
+                <button class="chip" onclick="setCalcBuffer(64)">64 smp</button>
+                <button class="chip active" onclick="setCalcBuffer(128)">128 smp</button>
+                <button class="chip" onclick="setCalcBuffer(256)">256 smp</button>
+                <button class="chip" onclick="setCalcBuffer(512)">512 smp</button>
+                <button class="chip" onclick="setCalcBuffer(1024)">1024 smp</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="calc-display-box">
+            <div class="calc-stat">
+              <span class="calc-label">Round-Trip Latency (RTL)</span>
+              <span class="calc-number" id="calcRtlMs">5.33 ms</span>
+            </div>
+            <div class="calc-breakdown">
+              <span>Input: <strong id="calcInMs">2.67 ms</strong></span>
+              <span>Output: <strong id="calcOutMs">2.67 ms</strong></span>
+            </div>
+            <div class="calc-suitability" id="calcSuitability">
+              ✅ Ottimale per esecuzione strumenti virtuali & performance MIDI
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DAW READINESS & STUDIO ADVICE -->
+      <div class="dual-columns">
+        <section class="card">
+          <div class="card-header">
+            <h3>🎹 Idoneità Flussi di Lavoro DAW</h3>
+          </div>
+          <div class="daw-list" id="dawList">
+            <!-- Populated via JS -->
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h3>💡 Analisi Tecnica & Raccomandazioni</h3>
+          </div>
+          <div class="insights-container">
+            <h4>Punti di Forza</h4>
+            <ul class="insights-list success" id="strengthsList"></ul>
+
+            <h4>Raccomandazioni di Ottimizzazione</h4>
+            <ul class="insights-list warning" id="recommendationsList"></ul>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="studio-footer">
+      <p>StudioSpec Pro • Audio Workstation & Driver Inspection Engine • Cross-Platform macOS / Windows</p>
+      <p class="copyright">Sviluppato per la verifica hardware di studi di registrazione professionali e sale di mastering.</p>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

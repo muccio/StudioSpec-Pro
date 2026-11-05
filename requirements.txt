@@ -1,0 +1,5 @@
+# StudioSpec Pro - Optional dependencies
+# (StudioSpec Pro runs out-of-the-box with Python standard library and zero mandatory dependencies)
+psutil>=5.9.0
+rich>=13.0.0
+sounddevice>=0.4.6

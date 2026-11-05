@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "studiospec-pro"
+version = "1.0.0"
+description = "Cross-platform Audio Workstation Inspector, Driver Diagnostic & Kontakt DFD Benchmark for macOS and Windows"
+authors = [
+    { name = "Mario Salvucci", email = "mariosalvucci@gmail.com" }
+]
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["audio", "coreaudio", "asio", "daw", "kontakt", "music-production", "benchmark"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Programming Language :: Python :: 3",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows"
+]
+
+[project.scripts]
+studiospec = "main:main"
+
+[tool.setuptools]
+packages = ["studio_inspector", "web_ui"]
+
+[tool.setuptools.package-data]
+web_ui = ["templates/*", "static/*"]
