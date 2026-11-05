@@ -65,6 +65,9 @@ def run_diagnostics(include_bench: bool = True, bench_mount: str = "/") -> Studi
     )
 
 def main():
+    # Filter out macOS Finder Process Serial Number arguments (e.g. -psn_0_12345)
+    clean_argv = [arg for arg in sys.argv[1:] if not arg.startswith("-psn")]
+
     parser = argparse.ArgumentParser(
         description="StudioSpec Pro - Audio Workstation Inspector & Kontakt DFD Benchmark"
     )
@@ -78,7 +81,7 @@ def main():
     parser.add_argument("--no-bench", action="store_true", help="Salta il benchmark di lettura/scrittura su disco")
     parser.add_argument("--mount", type=str, default="/", help="Percorso di montaggio disco da testare (default: / o C:\\)")
 
-    args = parser.parse_args()
+    args = parser.parse_args(clean_argv)
 
     # Determine execution mode
     if args.json:

@@ -10,7 +10,7 @@ import socket
 import webbrowser
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
-from typing import Optional
+from typing import Optional, Any, List, Dict
 
 from studio_inspector.core_audio_mac import inspect_macos_audio
 from studio_inspector.windows_audio import inspect_windows_audio_devices
@@ -19,6 +19,27 @@ from studio_inspector.scoring_engine import calculate_studio_score
 from studio_inspector.disk_benchmark import get_connected_drives, run_disk_benchmark
 from studio_inspector.report_generator import generate_markdown_report
 from studio_inspector.models import StudioWorkstationReport, DiskBenchmarkResult
+
+def get_web_ui_dir() -> str:
+    """Resolve correct web_ui directory whether running from source or frozen PyInstaller .app/.exe."""
+    if getattr(sys, "frozen", False):
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            cand1 = os.path.join(meipass, "web_ui")
+            if os.path.isdir(cand1):
+                return cand1
+            if os.path.isdir(os.path.join(meipass, "templates")):
+                return meipass
+
+        exe_dir = os.path.dirname(sys.executable)
+        cand2 = os.path.normpath(os.path.join(exe_dir, "..", "Resources", "web_ui"))
+        if os.path.isdir(cand2):
+            return cand2
+        cand3 = os.path.join(exe_dir, "web_ui")
+        if os.path.isdir(cand3):
+            return cand3
+
+    return os.path.dirname(os.path.abspath(__file__))
 
 def build_full_report(run_initial_bench: bool = False, bench_mount: str = "/") -> StudioWorkstationReport:
     """Scan workstation and build comprehensive report."""
@@ -62,8 +83,14 @@ def build_full_report(run_initial_bench: bool = False, bench_mount: str = "/") -
 
 class StudioHandler(BaseHTTPRequestHandler):
     cached_report: Optional[StudioWorkstationReport] = None
-    static_dir: str = os.path.join(os.path.dirname(__file__), "static")
-    templates_dir: str = os.path.join(os.path.dirname(__file__), "templates")
+    
+    @property
+    def static_dir(self) -> str:
+        return os.path.join(get_web_ui_dir(), "static")
+
+    @property
+    def templates_dir(self) -> str:
+        return os.path.join(get_web_ui_dir(), "templates")
 
     def log_message(self, format, *args):
         # Suppress standard noisy access logging
