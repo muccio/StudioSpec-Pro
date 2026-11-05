@@ -72,7 +72,8 @@ def main():
         description="StudioSpec Pro - Audio Workstation Inspector & Kontakt DFD Benchmark"
     )
     parser.add_argument("--cli", "-c", action="store_true", help="Esegui audit e stampa tabelle nel terminale (modalità CLI)")
-    parser.add_argument("--gui", "-g", action="store_true", help="Avvia l'interfaccia grafica Studio Dashboard nel browser")
+    parser.add_argument("--gui", "-g", action="store_true", help="Avvia l'applicazione desktop nativa (predefinita)")
+    parser.add_argument("--browser", action="store_true", help="Forza l'apertura della dashboard nel browser web anziché nella finestra nativa")
     parser.add_argument("--json", action="store_true", help="Esporta il report completo in formato JSON")
     parser.add_argument("--markdown", "-m", action="store_true", help="Esporta il report completo in formato Markdown")
     parser.add_argument("--out", "-o", type=str, help="Percorso file di salvataggio per esportazione")
@@ -117,12 +118,61 @@ def main():
             print(f"Report salvato in: {args.out}")
         return
 
-    # Default to GUI Web Dashboard if no CLI flags specified
+    # Default: Native Standalone Desktop Window (PyWebView)
     try:
-        from web_ui.server import start_server
-        start_server(port=args.port, open_browser=not args.no_browser)
+        if args.browser:
+            from web_ui.server import start_server
+            start_server(port=args.port, open_browser=True)
+            return
+
+        import threading
+        import socket
+        from http.server import HTTPServer
+        from web_ui.server import StudioHandler
+
+        # Find available port
+        port = args.port
+        for p in [port, 8845, 8846, 8847, 8848, 8849, 8850]:
+            try:
+                test_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                test_sock.bind(("127.0.0.1", p))
+                test_sock.close()
+                port = p
+                break
+            except OSError:
+                continue
+
+        # Start background server
+        httpd = HTTPServer(("127.0.0.1", port), StudioHandler)
+        srv_thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+        srv_thread.start()
+
+        # Try launching Native Standalone Window via pywebview
+        try:
+            import webview
+            window = webview.create_window(
+                title="StudioSpec Pro - Audio Workstation Inspector & Kontakt DFD Benchmark",
+                url=f"http://127.0.0.1:{port}",
+                width=1340,
+                height=880,
+                min_size=(1020, 680),
+                background_color="#0a0e17",
+                text_select=True
+            )
+            webview.start()
+        except ImportError:
+            # Fallback to web browser if pywebview is not installed in the python environment
+            print("\nNota: Per la finestra nativa desktop, installa pywebview (`pip install pywebview`).")
+            print(f"Apertura dashboard nel browser su: http://localhost:{port}\n")
+            import webbrowser
+            webbrowser.open(f"http://localhost:{port}")
+            try:
+                srv_thread.join()
+            except KeyboardInterrupt:
+                pass
+
     except Exception as e:
-        print(f"Impossibile avviare la GUI web ({e}). Esecuzione in modalità CLI...\n")
+        print(f"Impossibile avviare la GUI ({e}). Esecuzione in modalità CLI...\n")
         report = run_diagnostics(include_bench=not args.no_bench, bench_mount=args.mount)
         print(generate_cli_report(report))
 

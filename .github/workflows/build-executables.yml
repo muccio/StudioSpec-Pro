@@ -23,14 +23,17 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller
+          pip install pyinstaller pywebview
 
-      - name: Build Windows Standalone EXE
+      - name: Build Windows Standalone Native Window EXE
         run: |
           pyinstaller --noconfirm --onefile --windowed `
             --name "StudioSpecPro" `
             --add-data "web_ui;web_ui" `
             --add-data "studio_inspector;studio_inspector" `
+            --collect-all webview `
+            --hidden-import="webview.platforms.edgechromium" `
+            --hidden-import="webview.platforms.winforms" `
             --hidden-import="studio_inspector.windows_audio" `
             --hidden-import="studio_inspector.models" `
             --hidden-import="studio_inspector.hardware_specs" `
@@ -38,6 +41,7 @@ jobs:
             --hidden-import="studio_inspector.disk_benchmark" `
             --hidden-import="studio_inspector.report_generator" `
             --hidden-import="studio_inspector.latency_calc" `
+            --hidden-import="web_ui.server" `
             main.py
 
       - name: Compress Windows Release

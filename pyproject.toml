@@ -11,6 +11,9 @@ authors = [
 ]
 readme = "README.md"
 requires-python = ">=3.8"
+dependencies = [
+    "pywebview>=5.0.0"
+]
 keywords = ["audio", "coreaudio", "asio", "daw", "kontakt", "music-production", "benchmark"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
