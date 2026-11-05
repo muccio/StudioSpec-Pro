@@ -73,9 +73,18 @@ StudioSpec Pro offre una **doppia modalità di utilizzo**:
 
 ---
 
-## 📦 Installazione & Avvio Rapido
+## 📦 Download Eseguibili Standalone (v1.0.0)
 
-StudioSpec Pro è progettato con **zero dipendenze esterne obbligatorie**: utilizza la libreria standard di Python e le API native di sistema (macOS CoreAudio via ctypes, Windows Registry via winreg). Funziona con qualsiasi installazione di Python 3.8 o superiore.
+Non è richiesta alcuna installazione di Python per utilizzare gli eseguibili standalone:
+
+| Piattaforma | File Eseguibile / Pacchetto | Note di Installazione |
+|---|---|---|
+| **macOS** | [**`StudioSpecPro-macOS.dmg`**](https://github.com/muccio/StudioSpec-Pro/releases/download/v1.0.0/StudioSpecPro-macOS.dmg) (o [`.app.zip`](https://github.com/muccio/StudioSpec-Pro/releases/download/v1.0.0/StudioSpecPro-macOS.app.zip)) | Apri il `.dmg` e trascina **StudioSpec Pro.app** in *Applicazioni*. |
+| **Windows** | [**`StudioSpecPro.exe`**](https://github.com/muccio/StudioSpec-Pro/releases/download/v1.0.0/StudioSpecPro.exe) (o [`Standalone.zip`](https://github.com/muccio/StudioSpec-Pro/releases/download/v1.0.0/StudioSpecPro-Windows-x64-Standalone.zip)) | Eseguibile nativo x86-64 a 64-bit pronto con doppio clic. |
+
+---
+
+## 💻 Esecuzione da Sorgente / Script (Python)
 
 ### Su macOS:
 ```bash
