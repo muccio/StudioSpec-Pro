@@ -1,0 +1,51 @@
+name: Build Standalone Executables (macOS .app & Windows .exe)
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+
+      - name: Build Windows Standalone EXE
+        run: |
+          pyinstaller --noconfirm --onefile --windowed `
+            --name "StudioSpecPro" `
+            --add-data "web_ui;web_ui" `
+            --add-data "studio_inspector;studio_inspector" `
+            --hidden-import="studio_inspector.windows_audio" `
+            --hidden-import="studio_inspector.models" `
+            --hidden-import="studio_inspector.hardware_specs" `
+            --hidden-import="studio_inspector.scoring_engine" `
+            --hidden-import="studio_inspector.disk_benchmark" `
+            --hidden-import="studio_inspector.report_generator" `
+            --hidden-import="studio_inspector.latency_calc" `
+            main.py
+
+      - name: Compress Windows Release
+        run: |
+          Compress-Archive -Path "dist\StudioSpecPro.exe", "README.md", "LICENSE" -DestinationPath "dist\StudioSpecPro-Windows-x64-Standalone.zip"
+
+      - name: Upload Windows EXE to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload v1.0.0 dist\StudioSpecPro.exe "dist\StudioSpecPro-Windows-x64-Standalone.zip" --clobber
